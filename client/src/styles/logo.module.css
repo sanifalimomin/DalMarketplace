@@ -1,0 +1,20 @@
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    width: 30px;
+    background-color: hsl(0, 0%, 0%);
+    margin: 10px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logoText {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffff;
+    font-family: 'Inter', Arial, sans-serif;
+}

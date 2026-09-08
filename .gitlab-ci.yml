@@ -1,0 +1,18 @@
+# Pipeline entry point. GitLab requires this file at the repo root; the actual
+# job definitions live in ci/ — see ci/README.md for the pipeline docs and the
+# CI/CD variables it expects (Settings > CI/CD > Variables).
+
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_API: docker.io/$DOCKERHUB_USER/dalmarketplace-api
+  IMAGE_CLIENT: docker.io/$DOCKERHUB_USER/dalmarketplace-client
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+
+include:
+  - local: ci/common.gitlab-ci.yml
+  - local: ci/build.gitlab-ci.yml
+  - local: ci/deploy.gitlab-ci.yml

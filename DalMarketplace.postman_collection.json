@@ -1,0 +1,857 @@
+{
+  "info": {
+    "_postman_id": "a1f2c3d4-0007-4a10-9b2e-dalmarketplace01",
+    "name": "DalMarketplace API",
+    "description": "API collection for the DalMarketplace backend (Express + Firestore).\n\nUsage:\n1. Set the `baseUrl` collection variable (default http://localhost:5000).\n2. Run **Auth > Signup** once to create a user (email must end in @dal.ca).\n3. Run **Auth > Login** — its test script saves the JWT into the `token` variable automatically.\n4. All protected requests (e.g. Listings > Create Listing) then send `Authorization: Bearer {{token}}`.\n\n**Error shape (consistent across the whole API):**\n```\n{ \"error\": \"<message>\", \"details\": [\"...\"] }\n```\n`error` is always a human-readable string. `details` is only present for validation errors (an array of field problems). 5xx errors are rendered as `{ \"error\": \"Internal server error\" }` (internal messages are not leaked). Saved examples below show each case.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "userId", "value": "", "type": "string" },
+    { "key": "bannerId", "value": "B00979961", "type": "string" },
+    { "key": "password", "value": "secret1", "type": "string" },
+    { "key": "listingId", "value": "", "type": "string" },
+    { "key": "sellerId", "value": "", "type": "string" },
+    { "key": "reviewId", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api", "auth", "signup"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"sanif@dal.ca\",\n  \"password\": \"{{password}}\",\n  \"name\": \"Sanif Ali Momin\",\n  \"bannerId\": \"{{bannerId}}\"\n}" },
+            "description": "Register a new user. Email must end in @dal.ca. Returns the created userId."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api", "auth", "signup"] },
+                "body": { "mode": "raw", "raw": "{\n  \"email\": \"sanif@dal.ca\",\n  \"password\": \"secret1\",\n  \"name\": \"Sanif Ali Momin\",\n  \"bannerId\": \"B00979961\"\n}" }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"User registered\",\n  \"userId\": \"YsOrTVKF7i33arD7LBqp\"\n}"
+            },
+            {
+              "name": "400 Not a Dalhousie email",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api", "auth", "signup"] },
+                "body": { "mode": "raw", "raw": "{\n  \"email\": \"sanif@gmail.com\",\n  \"password\": \"secret1\",\n  \"name\": \"Sanif\",\n  \"bannerId\": \"B00979961\"\n}" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Must use a Dalhousie email address\"\n}"
+            },
+            {
+              "name": "400 Email already registered",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/signup", "host": ["{{baseUrl}}"], "path": ["api", "auth", "signup"] },
+                "body": { "mode": "raw", "raw": "{\n  \"email\": \"sanif@dal.ca\",\n  \"password\": \"secret1\",\n  \"name\": \"Sanif\",\n  \"bannerId\": \"B00979961\"\n}" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Email already registered\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Save the JWT and identity so protected requests can reuse them.",
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 200 && res.token) {",
+                  "  pm.collectionVariables.set('token', res.token);",
+                  "  pm.collectionVariables.set('userId', res.userId);",
+                  "  pm.test('login returns a token', () => pm.expect(res.token).to.be.a('string'));",
+                  "} else {",
+                  "  pm.test('error responses use { error: string }', () => pm.expect(res.error).to.be.a('string'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"bannerId\": \"{{bannerId}}\",\n  \"password\": \"{{password}}\"\n}" },
+            "description": "Authenticate by Banner ID + password. On success, the test script stores `token` and `userId` as collection variables."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+                "body": { "mode": "raw", "raw": "{\n  \"bannerId\": \"B00979961\",\n  \"password\": \"secret1\"\n}" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"userId\": \"YsOrTVKF7i33arD7LBqp\",\n  \"bannerId\": \"B00979961\",\n  \"name\": \"Sanif Ali Momin\"\n}"
+            },
+            {
+              "name": "400 Invalid credentials",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+                "body": { "mode": "raw", "raw": "{\n  \"bannerId\": \"B00000000\",\n  \"password\": \"wrong\"\n}" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Invalid banner ID or password\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Listings",
+      "item": [
+        {
+          "name": "Create Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 201 && res.id) {",
+                  "  pm.collectionVariables.set('listingId', res.id);",
+                  "}",
+                  "pm.test('listing created (201)', () => pm.expect(pm.response.code).to.eql(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/listings", "host": ["{{baseUrl}}"], "path": ["api", "listings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"LED Monitor\",\n  \"description\": \"24-inch 1080p monitor, barely used.\",\n  \"price\": 120,\n  \"category\": \"Electronics\",\n  \"condition\": \"Good\",\n  \"region\": \"Halifax\",\n  \"images\": [\"https://res.cloudinary.com/demo/image/upload/sample.jpg\"],\n  \"status\": \"published\"\n}" },
+            "description": "Create a listing (requires auth). Server validates required fields and derives the seller from the token, not the body. `status: \"published\"` is normalized to `available`. category/condition/region must match the allowed enums."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings", "host": ["{{baseUrl}}"], "path": ["api", "listings"] },
+                "body": { "mode": "raw", "raw": "{\n  \"title\": \"LED Monitor\",\n  \"price\": 120,\n  \"category\": \"Electronics\",\n  \"condition\": \"Good\",\n  \"region\": \"Halifax\"\n}" }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp\"\n}"
+            },
+            {
+              "name": "401 Missing token",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings", "host": ["{{baseUrl}}"], "path": ["api", "listings"] },
+                "body": { "mode": "raw", "raw": "{}" }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Unauthorized\"\n}"
+            },
+            {
+              "name": "401 Invalid token",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  { "key": "Content-Type", "value": "application/json" },
+                  { "key": "Authorization", "value": "Bearer garbage" }
+                ],
+                "url": { "raw": "{{baseUrl}}/api/listings", "host": ["{{baseUrl}}"], "path": ["api", "listings"] },
+                "body": { "mode": "raw", "raw": "{}" }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Invalid token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Create Listing — invalid (validation demo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "pm.test('returns 400', () => pm.expect(pm.response.code).to.eql(400));",
+                  "pm.test('error is a string', () => pm.expect(res.error).to.be.a('string'));",
+                  "pm.test('details lists field problems', () => pm.expect(res.details).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/listings", "host": ["{{baseUrl}}"], "path": ["api", "listings"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"\",\n  \"price\": -5,\n  \"category\": \"Nope\"\n}" },
+            "description": "Demonstrates server-side validation: returns 400 with a `details` array listing each problem."
+          },
+          "response": [
+            {
+              "name": "400 Validation failed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings", "host": ["{{baseUrl}}"], "path": ["api", "listings"] },
+                "body": { "mode": "raw", "raw": "{\n  \"title\": \"\",\n  \"price\": -5,\n  \"category\": \"Nope\"\n}" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Invalid listing\",\n  \"details\": [\n    \"title is required\",\n    \"price must be a number >= 0\",\n    \"category must be one of: Electronics, Furniture, Clothing, Books, Sports, Other\",\n    \"condition must be one of: New, Like New, Good, Fair, Poor\",\n    \"region must be one of: Halifax, Dartmouth, Bedford, Sackville, Other\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "List Listings",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/listings?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "listings"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Items per page (1–50, default 20)." },
+                { "key": "cursor", "value": "", "description": "Pass the `nextCursor` from the previous page to fetch the next one.", "disabled": true }
+              ]
+            },
+            "description": "Requires auth (Bearer token). Paginated browse of published (`available`) listings, ordered newest-first. Cursor pagination: send `limit` and, for subsequent pages, `cursor` set to the `nextCursor` returned previously. `nextCursor` is `null` on the last page.\n\nNote: this query needs a Firestore composite index on `status` (asc) + `createdAt` (desc); Firestore logs a one-click link to create it on the first call."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/listings?limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "listings"],
+                  "query": [{ "key": "limit", "value": "20" }]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"listings\": [\n    {\n      \"id\": \"YsOrTVKF7i33arD7LBqp\",\n      \"title\": \"LED Monitor\",\n      \"title_lower\": \"led monitor\",\n      \"description\": \"24-inch 1080p monitor, barely used.\",\n      \"price\": 120,\n      \"category\": \"Electronics\",\n      \"condition\": \"Good\",\n      \"region\": \"Halifax\",\n      \"images\": [\"https://res.cloudinary.com/demo/image/upload/sample.jpg\"],\n      \"status\": \"available\",\n      \"aiSummary\": null,\n      \"sellerId\": \"YsOrTVKF7i33arD7LBqp\",\n      \"sellerName\": \"Sanif Ali Momin\",\n      \"sellerBannerId\": \"B00979961\",\n      \"createdAt\": \"2026-06-18T15:04:12.000Z\",\n      \"updatedAt\": \"2026-06-18T15:04:12.000Z\"\n    }\n  ],\n  \"nextCursor\": null\n}"
+            },
+            {
+              "name": "401 Missing token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings?limit=20", "host": ["{{baseUrl}}"], "path": ["api", "listings"], "query": [{ "key": "limit", "value": "20" }] }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Search Listings",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/listings/search?q=led&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "listings", "search"],
+              "query": [
+                { "key": "q", "value": "led", "description": "Optional. Case-insensitive prefix match on the listing title (e.g. `led` matches \"LED Monitor\"). Omit to browse/filter without a text query." },
+                { "key": "category", "value": "Electronics", "description": "Optional equality filter — one of the CATEGORIES enum.", "disabled": true },
+                { "key": "region", "value": "Halifax", "description": "Optional equality filter — one of the REGIONS enum.", "disabled": true },
+                { "key": "condition", "value": "Good", "description": "Optional equality filter — one of the CONDITIONS enum.", "disabled": true },
+                { "key": "minPrice", "value": "50", "description": "Optional minimum price (inclusive). Applied in memory.", "disabled": true },
+                { "key": "maxPrice", "value": "200", "description": "Optional maximum price (inclusive). Applied in memory.", "disabled": true },
+                { "key": "sort", "value": "price_asc", "description": "Optional sort: `recent` (default), `price_asc`, or `price_desc`. Applied in memory.", "disabled": true },
+                { "key": "limit", "value": "20", "description": "Items per page (1–50, default 20)." },
+                { "key": "offset", "value": "", "description": "Pass the `nextOffset` from the previous page to fetch the next one.", "disabled": true }
+              ]
+            },
+            "description": "Requires auth (Bearer token). Search + filter over published (`available`), non-deleted listings. When `q` is present, it's a case-insensitive prefix match on the lowercased `title_lower` field (Firestore has no full-text search); when omitted, results are ordered newest-first.\n\n`category` / `region` / `condition` are native equality filters. `minPrice` / `maxPrice` and `sort` (`recent` | `price_asc` | `price_desc`) are applied in memory over a candidate window (up to 500 docs), because Firestore can't combine a title prefix range with a price range or arbitrary sort in one indexed query. Pagination is offset-based: the response returns `total` and `nextOffset` (`null` on the last page).\n\nNote: needs Firestore composite indexes (category/region/condition subsets for both the `title_lower` and `createdAt` order paths), defined in `firestore.indexes.json`; deploy with `firebase deploy --only firestore:indexes`. Until deployed the query 500s with a one-click index-creation link in the server logs."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/listings/search?q=led&limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "listings", "search"],
+                  "query": [{ "key": "q", "value": "led" }, { "key": "limit", "value": "20" }]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"listings\": [\n    {\n      \"id\": \"YsOrTVKF7i33arD7LBqp\",\n      \"title\": \"LED Monitor\",\n      \"title_lower\": \"led monitor\",\n      \"description\": \"24-inch 1080p monitor, barely used.\",\n      \"price\": 120,\n      \"category\": \"Electronics\",\n      \"condition\": \"Good\",\n      \"region\": \"Halifax\",\n      \"images\": [\"https://res.cloudinary.com/demo/image/upload/sample.jpg\"],\n      \"status\": \"available\",\n      \"aiSummary\": null,\n      \"sellerId\": \"YsOrTVKF7i33arD7LBqp\",\n      \"sellerName\": \"Sanif Ali Momin\",\n      \"sellerBannerId\": \"B00979961\",\n      \"createdAt\": \"2026-06-18T15:04:12.000Z\",\n      \"updatedAt\": \"2026-06-18T15:04:12.000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"nextOffset\": null\n}"
+            },
+            {
+              "name": "401 Missing token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings/search?q=led", "host": ["{{baseUrl}}"], "path": ["api", "listings", "search"], "query": [{ "key": "q", "value": "led" }] }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "My Listings",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/listings/mine?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "listings", "mine"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Items per page (1–50, default 20)." },
+                { "key": "cursor", "value": "", "description": "Pass the `nextCursor` (a `createdAt` value) from the previous page to fetch the next one.", "disabled": true }
+              ]
+            },
+            "description": "Requires auth (Bearer token). The authed user's own listings across every status — including `draft`, `reserved`, and `sold` — excluding soft-deleted ones, ordered newest-first. Powers the seller dashboard (unlike `GET /api/listings`, which only returns `available` listings). Cursor pagination via `nextCursor` (a `createdAt` value), `null` on the last page.\n\nNote: needs a Firestore composite index on `sellerId` + `isDeleted` + `createdAt` (in `firestore.indexes.json`)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/listings/mine?limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "listings", "mine"],
+                  "query": [{ "key": "limit", "value": "20" }]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"listings\": [\n    {\n      \"id\": \"Zq91kP2mXdL8wTn0bVcE\",\n      \"title\": \"Desk Lamp (draft)\",\n      \"title_lower\": \"desk lamp (draft)\",\n      \"description\": \"\",\n      \"price\": 15,\n      \"category\": \"Furniture\",\n      \"condition\": \"Good\",\n      \"region\": \"Halifax\",\n      \"images\": [],\n      \"status\": \"draft\",\n      \"aiSummary\": null,\n      \"sellerId\": \"YsOrTVKF7i33arD7LBqp\",\n      \"sellerName\": \"Sanif Ali Momin\",\n      \"sellerBannerId\": \"B00979961\",\n      \"createdAt\": \"2026-06-20T09:11:03.000Z\",\n      \"updatedAt\": \"2026-06-20T09:11:03.000Z\"\n    },\n    {\n      \"id\": \"YsOrTVKF7i33arD7LBqp\",\n      \"title\": \"LED Monitor\",\n      \"title_lower\": \"led monitor\",\n      \"description\": \"24-inch 1080p monitor, barely used.\",\n      \"price\": 120,\n      \"category\": \"Electronics\",\n      \"condition\": \"Good\",\n      \"region\": \"Halifax\",\n      \"images\": [\"https://res.cloudinary.com/demo/image/upload/sample.jpg\"],\n      \"status\": \"available\",\n      \"aiSummary\": null,\n      \"sellerId\": \"YsOrTVKF7i33arD7LBqp\",\n      \"sellerName\": \"Sanif Ali Momin\",\n      \"sellerBannerId\": \"B00979961\",\n      \"createdAt\": \"2026-06-18T15:04:12.000Z\",\n      \"updatedAt\": \"2026-06-18T15:04:12.000Z\"\n    }\n  ],\n  \"nextCursor\": null\n}"
+            },
+            {
+              "name": "401 Missing token",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings/mine?limit=20", "host": ["{{baseUrl}}"], "path": ["api", "listings", "mine"], "query": [{ "key": "limit", "value": "20" }] }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Unauthorized\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Listing by ID",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] },
+            "description": "Requires auth (Bearer token). Single listing detail — returns the full document (seller fields + `aiSummary` included), or 404 if no listing has that id. Uses the `listingId` saved by **Create Listing**."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp\",\n  \"title\": \"LED Monitor\",\n  \"title_lower\": \"led monitor\",\n  \"description\": \"24-inch 1080p monitor, barely used.\",\n  \"price\": 120,\n  \"category\": \"Electronics\",\n  \"condition\": \"Good\",\n  \"region\": \"Halifax\",\n  \"images\": [\"https://res.cloudinary.com/demo/image/upload/sample.jpg\"],\n  \"status\": \"available\",\n  \"aiSummary\": null,\n  \"sellerId\": \"YsOrTVKF7i33arD7LBqp\",\n  \"sellerName\": \"Sanif Ali Momin\",\n  \"sellerBannerId\": \"B00979961\",\n  \"createdAt\": \"2026-06-18T15:04:12.000Z\",\n  \"updatedAt\": \"2026-06-18T15:04:12.000Z\"\n}"
+            },
+            {
+              "name": "404 Listing not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings/does-not-exist", "host": ["{{baseUrl}}"], "path": ["api", "listings", "does-not-exist"] }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Listing not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Listing",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"LED Monitor (price drop)\",\n  \"price\": 95,\n  \"description\": \"24-inch 1080p monitor, barely used. Now cheaper!\"\n}" },
+            "description": "Edit a listing — owner only. Partial body allowed (only sends fields you include; validated with `validateListing({ partial: true })`). Re-checks ownership against the token: 403 if you don't own it, 404 if it's missing or soft-deleted."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] },
+                "body": { "mode": "raw", "raw": "{\n  \"title\": \"LED Monitor (price drop)\",\n  \"price\": 95\n}" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp\",\n  \"updatedAt\": \"2026-06-19T16:20:00.000Z\",\n  \"title\": \"LED Monitor (price drop)\",\n  \"title_lower\": \"led monitor (price drop)\",\n  \"price\": 95\n}"
+            },
+            {
+              "name": "403 Not the owner",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] },
+                "body": { "mode": "raw", "raw": "{\n  \"price\": 1\n}" }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"You do not own this listing\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update Listing Status",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"reserved\"\n}" },
+            "description": "Set the sale status — owner only. `status` must be one of `available`, `reserved`, `sold` (400 otherwise). 403 if not the owner, 404 if missing/soft-deleted."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}", "status"] },
+                "body": { "mode": "raw", "raw": "{\n  \"status\": \"reserved\"\n}" }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp\",\n  \"status\": \"reserved\"\n}"
+            },
+            {
+              "name": "400 Invalid status",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}/status", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}", "status"] },
+                "body": { "mode": "raw", "raw": "{\n  \"status\": \"draft\"\n}" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Invalid status\",\n  \"details\": [\n    \"status must be one of: available, reserved, sold\"\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "Delete Listing (soft)",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] },
+            "description": "Soft delete — owner only. Does NOT remove the document; it sets `isDeleted: true` + `deletedAt`, so the listing disappears from browse (`GET /api/listings`) and detail (`GET /api/listings/:id` then 404s). 403 if not the owner. Calling it again 404s (already deleted)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp\",\n  \"isDeleted\": true\n}"
+            },
+            {
+              "name": "404 Already deleted / not found",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/listings/{{listingId}}", "host": ["{{baseUrl}}"], "path": ["api", "listings", "{{listingId}}"] }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Listing not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (pm.response.code === 201 && res.id) {",
+                  "  pm.collectionVariables.set('reviewId', res.id);",
+                  "}",
+                  "pm.test('review created (201)', () => pm.expect(pm.response.code).to.eql(201));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api", "reviews"] },
+            "body": { "mode": "raw", "raw": "{\n  \"sellerId\": \"{{sellerId}}\",\n  \"listingId\": \"{{listingId}}\",\n  \"rating\": 5,\n  \"comment\": \"Great seller, smooth pickup.\"\n}" },
+            "description": "Submit a star rating (1–5) + comment for a seller (requires auth; reviewer is taken from the token). Preconditions the server enforces:\n- The listing (`listingId`) must exist, belong to `sellerId`, and be `status: \"sold\"`.\n- You cannot review yourself (`sellerId` must differ from your own userId).\n- One review per reviewer per listing — the review doc id is `reviewerId_listingId`, so a repeat returns 409.\n\nOn success it atomically writes the review and updates the seller's denormalized `ratingAvg` + `ratingCount`. Set the `sellerId` and `listingId` collection variables to a sold listing owned by another user before running."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api", "reviews"] },
+                "body": { "mode": "raw", "raw": "{\n  \"sellerId\": \"9kQ2mZ1xTvB7\",\n  \"listingId\": \"Ld3PpN8aQ2wR\",\n  \"rating\": 5,\n  \"comment\": \"Great seller, smooth pickup.\"\n}" }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp_Ld3PpN8aQ2wR\",\n  \"sellerId\": \"9kQ2mZ1xTvB7\",\n  \"reviewerId\": \"YsOrTVKF7i33arD7LBqp\",\n  \"reviewerName\": \"Sanif Ali Momin\",\n  \"listingId\": \"Ld3PpN8aQ2wR\",\n  \"rating\": 5,\n  \"comment\": \"Great seller, smooth pickup.\",\n  \"flagged\": false,\n  \"createdAt\": \"2026-07-17T12:00:00.000Z\"\n}"
+            },
+            {
+              "name": "400 Validation / self-review",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api", "reviews"] },
+                "body": { "mode": "raw", "raw": "{\n  \"sellerId\": \"\",\n  \"rating\": 7\n}" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Invalid review\",\n  \"details\": [\n    \"sellerId is required\",\n    \"listingId is required\",\n    \"rating must be an integer between 1 and 5\"\n  ]\n}"
+            },
+            {
+              "name": "403 Listing not sold",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api", "reviews"] },
+                "body": { "mode": "raw", "raw": "{\n  \"sellerId\": \"9kQ2mZ1xTvB7\",\n  \"listingId\": \"Ld3PpN8aQ2wR\",\n  \"rating\": 5\n}" }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"You can only review a sold listing\"\n}"
+            },
+            {
+              "name": "409 Already reviewed",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/reviews", "host": ["{{baseUrl}}"], "path": ["api", "reviews"] },
+                "body": { "mode": "raw", "raw": "{\n  \"sellerId\": \"9kQ2mZ1xTvB7\",\n  \"listingId\": \"Ld3PpN8aQ2wR\",\n  \"rating\": 4\n}" }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"You have already reviewed this listing\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Seller Reviews",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/seller/{{sellerId}}?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "seller", "{{sellerId}}"],
+              "query": [
+                { "key": "limit", "value": "20", "description": "Items per page (1–50, default 20)." },
+                { "key": "cursor", "value": "", "description": "Pass the `nextCursor` (a `createdAt` value) from the previous page to fetch the next one.", "disabled": true }
+              ]
+            },
+            "description": "Requires auth (Bearer token). All reviews for a seller, newest-first, excluding flagged ones. Cursor pagination via `nextCursor` (a `createdAt` value), `null` on the last page.\n\nNote: needs a Firestore composite index on `sellerId` + `flagged` + `createdAt` (in `firestore.indexes.json`)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/reviews/seller/9kQ2mZ1xTvB7?limit=20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "reviews", "seller", "9kQ2mZ1xTvB7"],
+                  "query": [{ "key": "limit", "value": "20" }]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"reviews\": [\n    {\n      \"id\": \"YsOrTVKF7i33arD7LBqp_Ld3PpN8aQ2wR\",\n      \"sellerId\": \"9kQ2mZ1xTvB7\",\n      \"reviewerId\": \"YsOrTVKF7i33arD7LBqp\",\n      \"reviewerName\": \"Sanif Ali Momin\",\n      \"listingId\": \"Ld3PpN8aQ2wR\",\n      \"rating\": 5,\n      \"comment\": \"Great seller, smooth pickup.\",\n      \"flagged\": false,\n      \"createdAt\": \"2026-07-17T12:00:00.000Z\"\n    }\n  ],\n  \"nextCursor\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Flag Review",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/reviews/{{reviewId}}/flag", "host": ["{{baseUrl}}"], "path": ["api", "reviews", "{{reviewId}}", "flag"] },
+            "description": "Requires auth (Bearer token). Report a review as abusive — sets `flagged: true` on the review, which removes it from `GET /api/reviews/seller/:id`. 404 if the review id doesn't exist. Uses the `reviewId` saved by **Create Review**."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/reviews/{{reviewId}}/flag", "host": ["{{baseUrl}}"], "path": ["api", "reviews", "{{reviewId}}", "flag"] }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"id\": \"YsOrTVKF7i33arD7LBqp_Ld3PpN8aQ2wR\",\n  \"flagged\": true\n}"
+            },
+            {
+              "name": "404 Review not found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/reviews/does-not-exist/flag", "host": ["{{baseUrl}}"], "path": ["api", "reviews", "does-not-exist", "flag"] }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Review not found\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Get Users (placeholder)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] },
+            "description": "Placeholder route — currently returns { message: 'Users route' }."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Users route\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Errors",
+      "item": [
+        {
+          "name": "Unknown route (404 demo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/does-not-exist", "host": ["{{baseUrl}}"], "path": ["api", "does-not-exist"] },
+            "description": "Any unmatched route returns the standard 404 error shape via the central error handler."
+          },
+          "response": [
+            {
+              "name": "404 Not Found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": { "raw": "{{baseUrl}}/api/does-not-exist", "host": ["{{baseUrl}}"], "path": ["api", "does-not-exist"] }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Malformed JSON body (400 demo)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": { "mode": "raw", "raw": "{ this is not valid json }" },
+            "description": "A malformed JSON body is rejected by the body parser but still rendered through the central error handler, so it keeps the same { error } shape."
+          },
+          "response": [
+            {
+              "name": "400 Bad JSON",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+                "body": { "mode": "raw", "raw": "{ this is not valid json }" }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [{ "key": "Content-Type", "value": "application/json; charset=utf-8" }],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Expected property name or '}' in JSON at position 2\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

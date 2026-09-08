@@ -1,0 +1,19 @@
+server {
+    listen       ${PORT};
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # Long-cache the content-hashed build assets.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # SPA fallback: every unmatched path returns index.html so React Router
+    # can resolve client-side routes on hard refresh / deep links.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

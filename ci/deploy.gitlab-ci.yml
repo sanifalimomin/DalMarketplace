@@ -1,0 +1,11 @@
+# Deploy stage: the university GitLab instance cannot reach Render's API, so the
+# pipeline just pings each service's deploy hook and Render pulls `:latest`
+# from Docker Hub itself.
+
+deploy:render:
+  extends: .dal_runner
+  stage: deploy
+  image: curlimages/curl:latest
+  script:
+    - curl -fsS -X POST "$RENDER_DEPLOY_HOOK_API"
+    - curl -fsS -X POST "$RENDER_DEPLOY_HOOK_CLIENT"

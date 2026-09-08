@@ -1,0 +1,23 @@
+# Build stage: build both images and push them to Docker Hub, tagged with the
+# commit SHA (immutable, for rollbacks) and `latest` (what Render pulls).
+
+build:api:
+  extends: .docker_build
+  script:
+    - docker build -t "$IMAGE_API:$CI_COMMIT_SHORT_SHA" -t "$IMAGE_API:latest" ./server
+    - docker push "$IMAGE_API:$CI_COMMIT_SHORT_SHA"
+    - docker push "$IMAGE_API:latest"
+
+# The VITE_* values are compiled into the bundle here, at build time — they are
+# not read from the environment at runtime, so they must be CI variables.
+build:client:
+  extends: .docker_build
+  script:
+    - docker build
+      --build-arg VITE_API_BASE_URL="$VITE_API_BASE_URL"
+      --build-arg VITE_CLOUDINARY_CLOUD_NAME="$VITE_CLOUDINARY_CLOUD_NAME"
+      --build-arg VITE_CLOUDINARY_UPLOAD_PRESET="$VITE_CLOUDINARY_UPLOAD_PRESET"
+      --build-arg VITE_STREAM_API_KEY="$VITE_STREAM_API_KEY"
+      -t "$IMAGE_CLIENT:$CI_COMMIT_SHORT_SHA" -t "$IMAGE_CLIENT:latest" ./client
+    - docker push "$IMAGE_CLIENT:$CI_COMMIT_SHORT_SHA"
+    - docker push "$IMAGE_CLIENT:latest"

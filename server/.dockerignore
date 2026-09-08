@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+.env
+.env.*
+.firebase
+.firebaserc
+firebase.json
+*.md
+.git
+.gitignore
+Dockerfile
+.dockerignore

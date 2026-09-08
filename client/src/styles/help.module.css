@@ -1,0 +1,150 @@
+.page {
+  min-height: 100vh;
+  background: #f2f2f2;
+  box-sizing: border-box;
+  font-family: Inter, Arial, sans-serif;
+  margin: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  max-width: 820px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 28px 48px;
+  box-sizing: border-box;
+  flex: 1;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.4px;
+  margin-bottom: 22px;
+}
+
+.accordionList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #e2e2e2;
+  border-radius: 10px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.cardHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.cardTitle {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  flex: none;
+  color: #808080;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.cardBody {
+  padding: 0 22px 20px;
+  border-top: 1px solid #e2e2e2;
+}
+
+.placeholderBlock {
+  padding-top: 16px;
+}
+
+.placeholderItem + .placeholderItem {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e2e2e2;
+}
+
+.placeholderQuestion {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.placeholderAnswer {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4d4d4d;
+  margin: 0;
+}
+
+.contactList {
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contactRow {
+  font-size: 14px;
+  line-height: 1.5;
+  color: #4d4d4d;
+}
+
+.contactLabel {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.contactLink {
+  color: #4d4d4d;
+  text-decoration: none;
+}
+
+.contactLink:hover {
+  text-decoration: underline;
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  color: #808080;
+  padding: 0 28px 28px;
+}
+
+.footerLink {
+  color: #808080;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  text-decoration: underline;
+}
+
+.footerSep {
+  margin: 0 4px;
+}

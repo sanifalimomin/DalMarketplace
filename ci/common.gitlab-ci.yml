@@ -1,0 +1,19 @@
+# Shared job bases. Included by the root .gitlab-ci.yml.
+
+# Every job runs on the Dal FCS shared Docker runner, and only for main —
+# feature branches and MRs must not publish images or trigger a deploy.
+.dal_runner:
+  tags:
+    - dalfcs_gitlab_docker_ci
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# Docker-in-Docker build environment, authenticated against Docker Hub.
+.docker_build:
+  extends: .dal_runner
+  stage: build
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin docker.io

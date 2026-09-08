@@ -1,0 +1,146 @@
+.page {
+  max-width: 900px;
+  margin: 40px auto;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+}
+
+.profileCard {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  margin-bottom: 30px;
+}
+
+.name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.verified {
+  color: #2a7;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.infoRow {
+  margin-top: 15px;
+  display: flex;
+  gap: 20px;
+  color: #555;
+}
+
+.ratingRow {
+  margin-top: 15px;
+  font-size: 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.stars {
+  font-size: 22px;
+}
+
+.reviewCount {
+  color: #777;
+}
+
+.reviewList {
+  margin-bottom: 40px;
+}
+
+.reviewCard {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.reviewHeader {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.time {
+  color: #777;
+  font-size: 14px;
+}
+
+.reviewText {
+  margin-top: 8px;
+  color: #333;
+}
+
+.leaveReview {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+.starSelector {
+  margin: 10px 0;
+}
+
+.star {
+  font-size: 28px;
+  cursor: pointer;
+  color: #ccc;
+}
+
+.starActive {
+  font-size: 28px;
+  cursor: pointer;
+  color: gold;
+}
+
+.textBox {
+  width: 100%;
+  height: 100px;
+  margin-top: 10px;
+  padding: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.postButton {
+  margin-top: 12px;
+  padding: 10px 20px;
+  background: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.postButton:hover {
+  background: #0053cc;
+}
+
+.note {
+  margin-top: 10px;
+  color: #777;
+  font-size: 14px;
+}
+
+.starRow {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.starButton {
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.starButton:hover {
+    transform: scale(1.15);
+}
